@@ -1,17 +1,34 @@
+/*
+    By Ethan Conneely
+    G00393941
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <conio.h>
 
 #define TotalCards 52
 #define PlayersCards 13
 
+int currentRound;
+int currentPlayer;
+int numberOfPlayers;
+
 int cards[TotalCards];
 int suits[TotalCards];
 
-void ShuffleDeck()
+// https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c
+// Used to clear the screen
+void clearScreen()
 {
-    // Randomize the order of cards in the deck
+    system("cls");
+}
+
+// Randomize the order of cards in the deck
+void shuffleDeck()
+{
     for (int i = 0; i < 200; i++)
     {
         int cardA = rand() % TotalCards;
@@ -28,7 +45,7 @@ void ShuffleDeck()
 }
 
 // Prints the character for each card suit
-void PrintSuit(int suit)
+void printSuit(int suit)
 {
     switch (suit)
     {
@@ -50,140 +67,211 @@ void PrintSuit(int suit)
     }
 }
 
-void Reset()
+// Reset the cards and shuffle
+void reset()
 {
     srand((unsigned)time(0));
 
     for (int i = 0; i < TotalCards; i++)
     {
-        cards[i] = -1;
-        //  2 + (i % PlayersCards);
+        cards[i] = 2 + (i % PlayersCards);
         suits[i] = i / PlayersCards;
     }
 
     for (int i = 0; i < 1000; i++)
     {
-        ShuffleDeck();
+        shuffleDeck();
     }
 }
 
-void PrintCards(int player)
+// Prints out all the cards to the screen
+int promptCards(int player)
 {
-    for (int i = 0; i < PlayersCards; i++)
-    {
-        printf("  ___ ");
-    }
-    printf("\n");
+    char answer;
 
-    for (int i = 0; i < PlayersCards; i++)
+    do
     {
-        if (cards[i] != -1)
+        clearScreen();
+
+        for (int i = 0; i < PlayersCards; i++)
         {
-            if (cards[i] == 10)
+            printf("  ___ ");
+        }
+        printf("\n");
+
+        for (int i = 0; i < PlayersCards; i++)
+        {
+            if (cards[i] != -1)
             {
-                printf(" |%d |", cards[i]);
-            }
-            else
-            {
-                if (cards[i] == 11)
+                if (cards[i] == 10)
                 {
-                    printf(" |J  |");
-                }
-                else if (cards[i] == 12)
-                {
-                    printf(" |K  |");
-                }
-                else if (cards[i] == 13)
-                {
-                    printf(" |Q  |");
-                }
-                else if (cards[i] == 14)
-                {
-                    printf(" |A  |");
+                    printf(" |%d |", cards[i]);
                 }
                 else
                 {
-                    printf(" |%d  |", cards[i]);
+                    if (cards[i] == 11)
+                    {
+                        printf(" |J  |");
+                    }
+                    else if (cards[i] == 12)
+                    {
+                        printf(" |Q  |");
+                    }
+                    else if (cards[i] == 13)
+                    {
+                        printf(" |K  |");
+                    }
+                    else if (cards[i] == 14)
+                    {
+                        printf(" |A  |");
+                    }
+                    else
+                    {
+                        printf(" |%d  |", cards[i]);
+                    }
                 }
-            }
-        }
-        else
-        {
-            printf(" | * |");
-        }
-    }
-    printf("\n");
-
-    for (int i = 0; i < PlayersCards; i++)
-    {
-        if (cards[i] != -1)
-        {
-            printf(" | ");
-            PrintSuit(suits[i]);
-            printf(" |");
-        }
-        else
-        {
-            printf(" |* *|");
-        }
-    }
-    printf("\n");
-
-    for (int i = 0; i < PlayersCards; i++)
-    {
-        if (cards[i] != -1)
-        {
-            if (cards[i] == 10)
-            {
-                printf(" |_%d|", cards[i]);
             }
             else
             {
-                if (cards[i] == 11)
+                printf(" | * |");
+            }
+        }
+        printf("\n");
+
+        for (int i = 0; i < PlayersCards; i++)
+        {
+            if (cards[i] != -1)
+            {
+                printf(" | ");
+                printSuit(suits[i]);
+                printf(" |");
+            }
+            else
+            {
+                printf(" |* *|");
+            }
+        }
+        printf("\n");
+
+        for (int i = 0; i < PlayersCards; i++)
+        {
+            if (cards[i] != -1)
+            {
+                if (cards[i] == 10)
                 {
-                    printf(" |__J|");
-                }
-                else if (cards[i] == 12)
-                {
-                    printf(" |__K|");
-                }
-                else if (cards[i] == 13)
-                {
-                    printf(" |__Q|");
-                }
-                else if (cards[i] == 14)
-                {
-                    printf("|__A|");
+                    printf(" |_%d|", cards[i]);
                 }
                 else
                 {
-                    printf(" |__%d|", cards[i]);
+                    if (cards[i] == 11)
+                    {
+                        printf(" |__J|");
+                    }
+                    else if (cards[i] == 12)
+                    {
+                        printf(" |__Q|");
+                    }
+                    else if (cards[i] == 13)
+                    {
+                        printf(" |__K|");
+                    }
+                    else if (cards[i] == 14)
+                    {
+                        printf(" |__A|");
+                    }
+                    else
+                    {
+                        printf(" |__%d|", cards[i]);
+                    }
                 }
             }
+            else
+            {
+                printf(" |_*_|");
+            }
         }
-        else
+        printf("\n");
+        printf("\n");
+
+        for (int i = 0; i < PlayersCards; i++)
         {
-            printf(" |_*_|");
+            if (cards[i] != -1)
+            {
+                printf("   %c  ", ('a' + i));
+            }
+            else
+            {
+                printf("      ");
+            }
         }
-    }
-    printf("\n");
-    printf("\n");
+        printf("\n");
+        printf("\n");
 
-    for (int i = 0; i < PlayersCards; i++)
-    {
-        printf("   %c  ", ('a' + i));
-    }
-    printf("\n");
-    printf("\n");
+        printf("Player %d card selection (a-m): ", player + 1);
 
-    printf("Player %d card selection (a-m): ", player + 1);
+        scanf("%c", &answer);
+
+        answer = answer - 'a';
+    } while (!(answer >= 0 && answer < 13));
+
+    return answer;
 }
 
-int main(void)
+int promptOptions(char *title, char *options[], int optionsSize)
 {
-    Reset();
+    int answer;
 
-    PrintCards(0);
+    do
+    {
+        clearScreen();
+        printf("%s\n", title);
+
+        for (int i = 0; i < optionsSize; i++)
+        {
+            printf("%d. %s\n", i + 1, options[i]);
+        }
+        printf("Choose option: ");
+
+        scanf("%d", &answer);
+
+        // Clear the input buffer of invalid data
+        fflush(stdin);
+
+    } while (!(answer >= 1 && answer <= optionsSize));
+
+    return answer;
+}
+
+void startUp()
+{
+    char *options[] = {"Choose Card", "Save and Exit", "Exit without saving", "Ouput Status"};
+    int option = promptOptions("test", options, 4);
+
+    printf("%d", option);
+
+    getchar();
+
+    clearScreen();
+}
+
+void main(void)
+{
+    reset();
+
+    char *options[] = {"New Game", "Load Game"};
+    int option = promptOptions("Pick an option.", options, 2);
+
+    // Load a previous Game
+    if (option == 2)
+    {
+        exit(0);
+        char *options[] = {"New Game", "Load Game"};
+        int option = promptOptions("Pick an option.", options, 2);
+    }
+
+    startUp();
+
+    promptCards(0);
 
     getchar();
     getchar();
