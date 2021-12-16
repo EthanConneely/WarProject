@@ -160,7 +160,7 @@ int promptCards(int player)
         }
         printf("\n");
 
-        for (int i = 0; i < PlayersCards; i++)
+        for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
         {
             if (cards[i] != -1)
             {
@@ -175,7 +175,7 @@ int promptCards(int player)
         }
         printf("\n");
 
-        for (int i = 0; i < PlayersCards; i++)
+        for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
         {
             if (cards[i] != -1)
             {
@@ -271,9 +271,49 @@ void handleWinner()
     for (int i = 0; i < numberPlaying; i++)
     {
         int index = playersChoice[i];
-        printf("Player %d ", i + 1, cards[index]);
-        printSuit(suits[index]);
-        printf(" %d", cards[index]);
+
+        printf("Player %d choose the ", i + 1, cards[index]);
+
+        if (cards[i] == 11)
+        {
+            printf("Joker of ");
+        }
+        else if (cards[i] == 12)
+        {
+            printf("Queen of ");
+        }
+        else if (cards[i] == 13)
+        {
+            printf("King of ");
+        }
+        else if (cards[i] == 14)
+        {
+            printf("Ace of ");
+        }
+        else
+        {
+            printf("%d of ", cards[i]);
+        }
+
+        switch (suits[i])
+        {
+        case 0:
+            printf("Spades");
+            break;
+
+        case 1:
+            printf("Hearts");
+            break;
+
+        case 2:
+            printf("Diamonds");
+            break;
+
+        case 3:
+            printf("Clubs");
+            break;
+        }
+
         printf("\n");
     }
 
@@ -402,7 +442,7 @@ void newGame()
 void exitGame()
 {
     char* options[] = { "New Game", "Load Game", "Quit" };
-    int option = promptOptions("", options, 3);
+    int option = promptOptions("Menu", options, 3);
 
     switch (option)
     {
