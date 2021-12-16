@@ -12,36 +12,48 @@
 #define TotalCards 52
 #define PlayersCards 13
 
-int currentRound;
-int currentPlayer;
-int numberOfPlayers;
+int currentRound = 1;
+int currentPlayer = 0;
+int numberPlaying = 2;
 
 int cards[TotalCards];
 int suits[TotalCards];
+int playersChoice[4];
+
+void clearScreen();
+void printSuit(int suit);
+void shuffleDeck();
+int promptCards(int player);
+int promptOptions(char* title, char* options[], int optionsSize);
+void nextRound();
+void loadGame();
+void saveGame();
+void printStatus();
+void newGame();
+void exitGame();
+
+void main(void)
+{
+    char* options[] = { "New Game", "Load Game" };
+    int option = promptOptions("Pick an option.", options, 2);
+
+    // Load a previous Game
+    if (option == 1)
+    {
+        newGame();
+    }
+    else
+    {
+        loadGame();
+        printStatus();
+    }
+}
 
 // https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c
 // Used to clear the screen
 void clearScreen()
 {
     system("cls");
-}
-
-// Randomize the order of cards in the deck
-void shuffleDeck()
-{
-    for (int i = 0; i < 200; i++)
-    {
-        int cardA = rand() % TotalCards;
-        int cardB = rand() % TotalCards;
-
-        int tempCard = cards[cardA];
-        cards[cardA] = cards[cardB];
-        cards[cardB] = tempCard;
-
-        int tempSuit = suits[cardA];
-        suits[cardA] = suits[cardB];
-        suits[cardB] = tempSuit;
-    }
 }
 
 // Prints the character for each card suit
@@ -67,8 +79,8 @@ void printSuit(int suit)
     }
 }
 
-// Reset the cards and shuffle
-void reset()
+// Randomize the order of cards in the deck
+void shuffleDeck()
 {
     srand((unsigned)time(0));
 
@@ -80,11 +92,21 @@ void reset()
 
     for (int i = 0; i < 1000; i++)
     {
-        shuffleDeck();
+        int cardA = rand() % TotalCards;
+        int cardB = rand() % TotalCards;
+
+        int tempCard = cards[cardA];
+        cards[cardA] = cards[cardB];
+        cards[cardB] = tempCard;
+
+        int tempSuit = suits[cardA];
+        suits[cardA] = suits[cardB];
+        suits[cardB] = tempSuit;
     }
 }
 
-// Prints out all the cards to the screen
+// Prints out all the cards to the screen and
+// let user pick one
 int promptCards(int player)
 {
     char answer;
@@ -99,7 +121,7 @@ int promptCards(int player)
         }
         printf("\n");
 
-        for (int i = 0; i < PlayersCards; i++)
+        for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
         {
             if (cards[i] != -1)
             {
@@ -214,10 +236,10 @@ int promptCards(int player)
         answer = answer - 'a';
     } while (!(answer >= 0 && answer < 13));
 
-    return answer;
+    return answer + (PlayersCards * currentPlayer);
 }
 
-int promptOptions(char *title, char *options[], int optionsSize)
+int promptOptions(char* title, char* options[], int optionsSize)
 {
     int answer;
 
@@ -242,37 +264,158 @@ int promptOptions(char *title, char *options[], int optionsSize)
     return answer;
 }
 
-void startUp()
+void handleWinner()
 {
-    char *options[] = {"Choose Card", "Save and Exit", "Exit without saving", "Ouput Status"};
-    int option = promptOptions("test", options, 4);
-
-    printf("%d", option);
-
-    getchar();
-
     clearScreen();
-}
 
-void main(void)
-{
-    reset();
-
-    char *options[] = {"New Game", "Load Game"};
-    int option = promptOptions("Pick an option.", options, 2);
-
-    // Load a previous Game
-    if (option == 2)
+    for (int i = 0; i < numberPlaying; i++)
     {
-        exit(0);
-        char *options[] = {"New Game", "Load Game"};
-        int option = promptOptions("Pick an option.", options, 2);
+        int index = playersChoice[i];
+        printf("Player %d ", i + 1, cards[index]);
+        printSuit(suits[index]);
+        printf(" %d", cards[index]);
+        printf("\n");
     }
 
-    startUp();
-
-    promptCards(0);
-
     getchar();
+}
+
+void nextRound()
+{
+    char* options[] = { "Choose Card", "Save and Exit", "Exit without saving", "Ouput Status" };
+
+    char title[60];
+
+    sprintf(title, "Take your turn Player %d", currentPlayer + 1);
+    int option = promptOptions(title, options, 4);
+
+    switch (option)
+    {
+    case 1:
+        playersChoice[currentPlayer] = promptCards(currentPlayer);
+        break;
+
+    case 2:
+        saveGame();
+        exitGame();
+        break;
+
+    case 3:
+        exitGame();
+        break;
+
+    case 4:
+        printStatus();
+        break;
+    }
+}
+
+void loadGame()
+{
+    FILE* file = fopen("WarSave1.txt", "r");
+
+    fscanf(file, "%d", &currentRound);  // current Round
+    fscanf(file, "%d", &numberPlaying); // number of players
+    fscanf(file, "%d", &currentPlayer); // current player
+
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = i * PlayersCards; j < PlayersCards + (PlayersCards * i); j++)
+        {
+            fscanf(file, "%d,", &cards[j]);
+        }
+
+        for (int j = i * PlayersCards; j < PlayersCards + (PlayersCards * i); j++)
+        {
+            fscanf(file, "%d,", &suits[j]);
+        }
+    }
+
+    fclose(file);
+}
+
+void saveGame()
+{
+    FILE* file = fopen("WarSave1.txt", "w");
+
+    fprintf(file, "%d\n", currentRound);  // current Round
+    fprintf(file, "%d\n", numberPlaying); // number of players
+    fprintf(file, "%d\n", currentPlayer); // current player
+
+    for (int year = 0; year < 4; year++)
+    {
+        fprintf(file, "\n", year + 1);
+
+        for (int j = year * PlayersCards; j < PlayersCards + (PlayersCards * year); j++)
+        {
+            fprintf(file, "%d,", cards[j]);
+        }
+
+        fprintf(file, "\n");
+
+        for (int j = year * PlayersCards; j < PlayersCards + (PlayersCards * year); j++)
+        {
+            fprintf(file, "%d,", suits[j]);
+        }
+
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+}
+
+void printStatus()
+{
+    clearScreen();
+
+    printf("Status:\n");
+
+    printf("Press any key to close menu...");
     getchar();
+}
+
+void newGame()
+{
+    char* options[] = { "2 Player game", "3 Player game", "4 Player game" };
+    int option = promptOptions("Choose how many players.", options, 3);
+
+    shuffleDeck();
+    numberPlaying = option + 1;
+
+    while (1)
+    {
+        for (int i = 0; i < numberPlaying; i++)
+        {
+            nextRound();
+            currentPlayer++;
+        }
+
+        handleWinner();
+
+        getchar();
+
+        currentPlayer = 0;
+        currentRound++;
+    }
+}
+
+void exitGame()
+{
+    char* options[] = { "New Game", "Load Game", "Quit" };
+    int option = promptOptions("", options, 3);
+
+    switch (option)
+    {
+    case 1:
+        newGame();
+        break;
+
+    case 2:
+        loadGame();
+        break;
+
+    case 3:
+        exit(0);
+        break;
+    }
 }
