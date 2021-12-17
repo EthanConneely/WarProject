@@ -15,9 +15,12 @@
 int currentRound = 1;
 int currentPlayer = 0;
 int numberPlaying = 2;
+int scorePool = 0;
 
 int cards[TotalCards];
 int suits[TotalCards];
+int playersScore[4];
+
 int playersChoice[4];
 
 void clearScreen();
@@ -31,11 +34,17 @@ void saveGame();
 void printStatus();
 void newGame();
 void exitGame();
+void handleWinner();
 
 void main(void)
 {
     char* options[] = { "New Game", "Load Game" };
     int option = promptOptions("Pick an option.", options, 2);
+
+    for (int i = 0; i < 4; i++)
+    {
+        playersScore[i] = 0;
+    }
 
     // Load a previous Game
     if (option == 1)
@@ -47,12 +56,30 @@ void main(void)
         loadGame();
         printStatus();
     }
+
+    // round loop
+    for (int i = 0; i < 13; i++)
+    {
+        for (int i = 0; i < numberPlaying; i++)
+        {
+            nextRound();
+            currentPlayer++;
+        }
+
+        handleWinner();
+
+        getchar();
+
+        currentPlayer = 0;
+        currentRound++;
+    }
 }
 
 // https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c
 // Used to clear the screen
 void clearScreen()
 {
+    // printf("\n\n");
     system("cls");
 }
 
@@ -83,12 +110,6 @@ void printSuit(int suit)
 void shuffleDeck()
 {
     srand((unsigned)time(0));
-
-    for (int i = 0; i < TotalCards; i++)
-    {
-        cards[i] = 2 + (i % PlayersCards);
-        suits[i] = i / PlayersCards;
-    }
 
     for (int i = 0; i < 1000; i++)
     {
@@ -215,11 +236,11 @@ int promptCards(int player)
         printf("\n");
         printf("\n");
 
-        for (int i = 0; i < PlayersCards; i++)
+        for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
         {
             if (cards[i] != -1)
             {
-                printf("   %c  ", ('a' + i));
+                printf("   %c  ", ('a' + i - (PlayersCards * currentPlayer)));
             }
             else
             {
@@ -234,9 +255,11 @@ int promptCards(int player)
         scanf("%c", &answer);
 
         answer = answer - 'a';
-    } while (!(answer >= 0 && answer < 13));
+    } while (!(answer >= 0 && answer < 13) || cards[answer + (PlayersCards * currentPlayer)] == -1);
 
-    return answer + (PlayersCards * currentPlayer);
+    int t = cards[answer + (PlayersCards * currentPlayer)];
+    cards[answer + (PlayersCards * currentPlayer)] = -1;
+    return t;
 }
 
 int promptOptions(char* title, char* options[], int optionsSize)
@@ -264,35 +287,31 @@ int promptOptions(char* title, char* options[], int optionsSize)
     return answer;
 }
 
-void handleWinner()
+void printPlayersChoices()
 {
-    clearScreen();
-
     for (int i = 0; i < numberPlaying; i++)
     {
-        int index = playersChoice[i];
+        printf("Player %d choose the ", i + 1, playersChoice[i]);
 
-        printf("Player %d choose the ", i + 1, cards[index]);
-
-        if (cards[i] == 11)
+        if (playersChoice[i] == 11)
         {
             printf("Joker of ");
         }
-        else if (cards[i] == 12)
+        else if (playersChoice[i] == 12)
         {
             printf("Queen of ");
         }
-        else if (cards[i] == 13)
+        else if (playersChoice[i] == 13)
         {
             printf("King of ");
         }
-        else if (cards[i] == 14)
+        else if (playersChoice[i] == 14)
         {
             printf("Ace of ");
         }
         else
         {
-            printf("%d of ", cards[i]);
+            printf("%d of ", playersChoice[i]);
         }
 
         switch (suits[i])
@@ -315,6 +334,62 @@ void handleWinner()
         }
 
         printf("\n");
+    }
+
+}
+
+void handleWinner()
+{
+    clearScreen();
+
+    printPlayersChoices();
+
+    int highest = 0;
+    int highestPlayer = -1;
+
+
+    // get the player with the highjest unique card
+    // and the displays it to the screen
+    for (int i = 0; i < numberPlaying - 1; i++)
+    {
+        int isDuplicate = 0;
+
+        for (int j = i + 1; j < numberPlaying; j++)
+        {
+            if (playersChoice[i] == playersChoice[j])
+            {
+                isDuplicate = 1;
+            }
+        }
+
+        if (isDuplicate == 1)
+        {
+            continue;
+        }
+
+        if (highest < playersChoice[i])
+        {
+            highest = playersChoice[i];
+            highestPlayer = i;
+        }
+    }
+
+    int roundTotal = 0;
+
+    for (int i = 0; i < numberPlaying; i++)
+    {
+        roundTotal += playersChoice[i];
+    }
+
+    if (highestPlayer == -1)
+    {
+        printf("There was a tie the %d points roll over to the next round!", roundTotal);
+    }
+    else
+    {
+        printf("Player %d has won the round\n", highestPlayer + 1);
+        printf("and was awarded %d points\n", roundTotal);
+        playersScore[highestPlayer] += roundTotal;
     }
 
     getchar();
@@ -369,6 +444,8 @@ void loadGame()
         {
             fscanf(file, "%d,", &suits[j]);
         }
+
+        fscanf(file, "%d,", &playersScore[i]);
     }
 
     fclose(file);
@@ -382,21 +459,26 @@ void saveGame()
     fprintf(file, "%d\n", numberPlaying); // number of players
     fprintf(file, "%d\n", currentPlayer); // current player
 
-    for (int year = 0; year < 4; year++)
+    for (int player = 0; player < 4; player++)
     {
-        fprintf(file, "\n", year + 1);
+        fprintf(file, "\n");
 
-        for (int j = year * PlayersCards; j < PlayersCards + (PlayersCards * year); j++)
+        for (int j = player * PlayersCards; j < PlayersCards + (PlayersCards * player); j++)
         {
             fprintf(file, "%d,", cards[j]);
         }
 
         fprintf(file, "\n");
 
-        for (int j = year * PlayersCards; j < PlayersCards + (PlayersCards * year); j++)
+        for (int j = player * PlayersCards; j < PlayersCards + (PlayersCards * player); j++)
         {
             fprintf(file, "%d,", suits[j]);
         }
+
+        fprintf(file, "\n");
+
+        // Player score
+        fprintf(file, "%d,", playersScore[player]);
 
         fprintf(file, "\n");
     }
@@ -409,9 +491,14 @@ void printStatus()
     clearScreen();
 
     printf("Status:\n");
+    for (int i = 0; i < numberPlaying; i++)
+    {
+        printf("Player %d's score %d\n", i + 1, playersScore[i]);
+    }
+    printf("Score pool %d\n", scorePool);
 
     printf("Press any key to close menu...");
-    getchar();
+    getch();
 }
 
 void newGame()
@@ -419,24 +506,15 @@ void newGame()
     char* options[] = { "2 Player game", "3 Player game", "4 Player game" };
     int option = promptOptions("Choose how many players.", options, 3);
 
-    shuffleDeck();
-    numberPlaying = option + 1;
-
-    while (1)
+    // Fill with default deck
+    for (int i = 0; i < TotalCards; i++)
     {
-        for (int i = 0; i < numberPlaying; i++)
-        {
-            nextRound();
-            currentPlayer++;
-        }
-
-        handleWinner();
-
-        getchar();
-
-        currentPlayer = 0;
-        currentRound++;
+        cards[i] = 2 + (i % PlayersCards);
+        suits[i] = i / PlayersCards;
     }
+
+    // shuffleDeck();
+    numberPlaying = option + 1;
 }
 
 void exitGame()
