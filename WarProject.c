@@ -136,9 +136,16 @@ int promptCards(int player)
     {
         clearScreen();
 
-        for (int i = 0; i < PlayersCards; i++)
+        for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
+        {
+            if (cards[i] != -1)
         {
             printf("  ___ ");
+        }
+            else
+            {
+                printf("      ");
+            }
         }
         printf("\n");
 
@@ -176,7 +183,7 @@ int promptCards(int player)
             }
             else
             {
-                printf(" | * |");
+                printf("      ");
             }
         }
         printf("\n");
@@ -191,7 +198,7 @@ int promptCards(int player)
             }
             else
             {
-                printf(" |* *|");
+                printf("      ");
             }
         }
         printf("\n");
@@ -230,7 +237,7 @@ int promptCards(int player)
             }
             else
             {
-                printf(" |_*_|");
+                printf("      ");
             }
         }
         printf("\n");
