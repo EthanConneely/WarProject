@@ -57,21 +57,44 @@ void main(void)
         printStatus();
     }
 
-    // round loop
-    for (int i = 0; i < 13; i++)
+    while (1)
     {
-        for (int i = 0; i < numberPlaying; i++)
+        // round loop
+        for (int i = currentRound; i < 13 + 1; i++)
         {
-            nextRound();
-            currentPlayer++;
+            for (int j = 0; j < numberPlaying; j++)
+            {
+                nextRound();
+            }
+
+            handleWinner();
+
+            getchar();
+
+            currentPlayer = 0;
+            currentRound++;
         }
 
-        handleWinner();
+        clearScreen();
 
+        int winnerScore = 0;
+        int winnerIndex = 0;
+
+        for (int i = 0; i < numberPlaying; i++)
+        {
+            if (playersScore[i] > winnerScore)
+            {
+                winnerScore = playersScore[i];
+                winnerIndex = i;
+            }
+        }
+
+        printf("The winner is Player %d with %d points\n", winnerIndex + 1, winnerScore);
+
+        printf("Press any key to close...");
         getchar();
 
-        currentPlayer = 0;
-        currentRound++;
+        exitGame();
     }
 }
 
@@ -139,9 +162,9 @@ int promptCards(int player)
         for (int i = PlayersCards * currentPlayer; i < PlayersCards + (PlayersCards * currentPlayer); i++)
         {
             if (cards[i] != -1)
-        {
-            printf("  ___ ");
-        }
+            {
+                printf("  ___ ");
+            }
             else
             {
                 printf("      ");
@@ -351,25 +374,27 @@ void handleWinner()
 
     printPlayersChoices();
 
+    printf("\n");
+
     int highest = 0;
     int highestPlayer = -1;
 
+    int duplicates[4] = { 0,0,0,0 };
 
     // get the player with the highjest unique card
     // and the displays it to the screen
-    for (int i = 0; i < numberPlaying - 1; i++)
+    for (int i = 0; i < numberPlaying; i++)
     {
-        int isDuplicate = 0;
-
         for (int j = i + 1; j < numberPlaying; j++)
         {
             if (playersChoice[i] == playersChoice[j])
             {
-                isDuplicate = 1;
+                duplicates[i] = 1;
+                duplicates[j] = 1;
             }
         }
 
-        if (isDuplicate == 1)
+        if (duplicates[i] == 1)
         {
             continue;
         }
@@ -391,50 +416,62 @@ void handleWinner()
     if (highestPlayer == -1)
     {
         printf("There was a tie the %d points roll over to the next round!", roundTotal);
+        scorePool = roundTotal;
     }
     else
     {
-        printf("Player %d has won the round\n", highestPlayer + 1);
-        printf("and was awarded %d points\n", roundTotal);
-        playersScore[highestPlayer] += roundTotal;
+        printf("Player %d has won the round ", highestPlayer + 1);
+        printf("and was awarded %d points\n", roundTotal + scorePool);
+        playersScore[highestPlayer] += roundTotal + scorePool;
     }
 
+    printf("\n");
+
+    printf("Press any key to close...");
     getchar();
 }
 
 void nextRound()
 {
-    char* options[] = { "Choose Card", "Save and Exit", "Exit without saving", "Ouput Status" };
-
     char title[60];
-
     sprintf(title, "Take your turn Player %d", currentPlayer + 1);
-    int option = promptOptions(title, options, 4);
 
-    switch (option)
+    int takenTurn = 0;
+
+    do
     {
-    case 1:
-        playersChoice[currentPlayer] = promptCards(currentPlayer);
-        break;
+        char* options[] = { "Choose Card", "Save and Exit", "Exit without saving", "Ouput Status" };
+        int option = promptOptions(title, options, 4);
 
-    case 2:
-        saveGame();
-        exitGame();
-        break;
+        switch (option)
+        {
+        case 1:
+            playersChoice[currentPlayer] = promptCards(currentPlayer);
+            currentPlayer++;
+            takenTurn = 1;
+            break;
 
-    case 3:
-        exitGame();
-        break;
+        case 2:
+            saveGame();
+            exitGame();
+            break;
 
-    case 4:
-        printStatus();
-        break;
-    }
+        case 3:
+            exitGame();
+            break;
+
+        case 4:
+            printStatus();
+            break;
+        }
+    } while (takenTurn == 0);
 }
 
 void loadGame()
 {
-    FILE* file = fopen("WarSave1.txt", "r");
+    clearScreen();
+
+    FILE* file = fopen("Save.txt", "r");
 
     fscanf(file, "%d", &currentRound);  // current Round
     fscanf(file, "%d", &numberPlaying); // number of players
@@ -460,7 +497,7 @@ void loadGame()
 
 void saveGame()
 {
-    FILE* file = fopen("WarSave1.txt", "w");
+    FILE* file = fopen("Save.txt", "w");
 
     fprintf(file, "%d\n", currentRound);  // current Round
     fprintf(file, "%d\n", numberPlaying); // number of players
@@ -502,14 +539,19 @@ void printStatus()
     {
         printf("Player %d's score %d\n", i + 1, playersScore[i]);
     }
-    printf("Score pool %d\n", scorePool);
+    printf("Score pool for next round %d\n", scorePool);
 
-    printf("Press any key to close menu...");
-    getch();
+    printf("Press any key to close...");
+    getchar();
 }
 
 void newGame()
 {
+    currentRound = 1;
+    currentPlayer = 0;
+    numberPlaying = 2;
+    scorePool = 0;
+
     char* options[] = { "2 Player game", "3 Player game", "4 Player game" };
     int option = promptOptions("Choose how many players.", options, 3);
 
@@ -520,7 +562,7 @@ void newGame()
         suits[i] = i / PlayersCards;
     }
 
-    // shuffleDeck();
+    shuffleDeck();
     numberPlaying = option + 1;
 }
 
