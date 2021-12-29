@@ -27,7 +27,7 @@ void clearScreen();
 void printSuit(int suit);
 void shuffleDeck();
 int promptCards(int player);
-int promptOptions(char* title, char* options[], int optionsSize);
+int promptOptions(char *title, char *options[], int optionsSize);
 void nextRound();
 void loadGame();
 void saveGame();
@@ -36,9 +36,9 @@ void newGame();
 void exitGame();
 void handleWinner();
 
-void main(void)
+void main()
 {
-    char* options[] = { "New Game", "Load Game" };
+    char *options[] = {"New Game", "Load Game"};
     int option = promptOptions("Pick an option.", options, 2);
 
     for (int i = 0; i < 4; i++)
@@ -91,7 +91,7 @@ void main(void)
 
         printf("The winner is Player %d with %d points\n", winnerIndex + 1, winnerScore);
 
-        printf("Press any key to close...");
+        printf("Press enter key to close...");
         getchar();
 
         exitGame();
@@ -292,7 +292,7 @@ int promptCards(int player)
     return t;
 }
 
-int promptOptions(char* title, char* options[], int optionsSize)
+int promptOptions(char *title, char *options[], int optionsSize)
 {
     int answer;
 
@@ -317,6 +317,7 @@ int promptOptions(char* title, char* options[], int optionsSize)
     return answer;
 }
 
+// Print in english the choice of the players
 void printPlayersChoices()
 {
     for (int i = 0; i < numberPlaying; i++)
@@ -365,9 +366,9 @@ void printPlayersChoices()
 
         printf("\n");
     }
-
 }
 
+// Hand and display the winner of the game
 void handleWinner()
 {
     clearScreen();
@@ -379,7 +380,7 @@ void handleWinner()
     int highest = 0;
     int highestPlayer = -1;
 
-    int duplicates[4] = { 0,0,0,0 };
+    int duplicates[4] = {0, 0, 0, 0};
 
     // get the player with the highjest unique card
     // and the displays it to the screen
@@ -427,10 +428,11 @@ void handleWinner()
 
     printf("\n");
 
-    printf("Press any key to close...");
+    printf("Press enter key to close...");
     getchar();
 }
 
+// Next round prompt
 void nextRound()
 {
     char title[60];
@@ -440,7 +442,7 @@ void nextRound()
 
     do
     {
-        char* options[] = { "Choose Card", "Save and Exit", "Exit without saving", "Ouput Status" };
+        char *options[] = {"Choose Card", "Save and Exit", "Exit without saving", "Ouput Status"};
         int option = promptOptions(title, options, 4);
 
         switch (option)
@@ -467,11 +469,12 @@ void nextRound()
     } while (takenTurn == 0);
 }
 
+// Load the game
 void loadGame()
 {
     clearScreen();
 
-    FILE* file = fopen("Save.txt", "r");
+    FILE *file = fopen("Save.txt", "r");
 
     fscanf(file, "%d", &currentRound);  // current Round
     fscanf(file, "%d", &numberPlaying); // number of players
@@ -495,9 +498,10 @@ void loadGame()
     fclose(file);
 }
 
+// Save the game
 void saveGame()
 {
-    FILE* file = fopen("Save.txt", "w");
+    FILE *file = fopen("Save.txt", "w");
 
     fprintf(file, "%d\n", currentRound);  // current Round
     fprintf(file, "%d\n", numberPlaying); // number of players
@@ -530,6 +534,7 @@ void saveGame()
     fclose(file);
 }
 
+// Print the status of the game
 void printStatus()
 {
     clearScreen();
@@ -541,10 +546,11 @@ void printStatus()
     }
     printf("Score pool for next round %d\n", scorePool);
 
-    printf("Press any key to close...");
+    printf("Press enter key to close...");
     getchar();
 }
 
+// Prompt the new game menu
 void newGame()
 {
     currentRound = 1;
@@ -552,8 +558,13 @@ void newGame()
     numberPlaying = 2;
     scorePool = 0;
 
-    char* options[] = { "2 Player game", "3 Player game", "4 Player game" };
-    int option = promptOptions("Choose how many players.", options, 3);
+    do
+    {
+        clearScreen();
+        printf("Input the number of players playing 2-4\n");
+        printf("Choose option: ");
+        scanf("%d", &numberPlaying);
+    } while (numberPlaying != 2 && numberPlaying != 3 && numberPlaying != 4);
 
     // Fill with default deck
     for (int i = 0; i < TotalCards; i++)
@@ -563,12 +574,12 @@ void newGame()
     }
 
     shuffleDeck();
-    numberPlaying = option + 1;
 }
 
+// Prompt the exit game menu
 void exitGame()
 {
-    char* options[] = { "New Game", "Load Game", "Quit" };
+    char *options[] = {"New Game", "Load Game", "Quit"};
     int option = promptOptions("Menu", options, 3);
 
     switch (option)
