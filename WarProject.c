@@ -476,6 +476,13 @@ void loadGame()
 
     FILE *file = fopen("Save.txt", "r");
 
+    if (file == NULL)
+    {
+        printf("Save not found exiting!");
+        getchar();
+        exit(0);
+    }
+
     fscanf(file, "%d", &currentRound);  // current Round
     fscanf(file, "%d", &numberPlaying); // number of players
     fscanf(file, "%d", &currentPlayer); // current player
